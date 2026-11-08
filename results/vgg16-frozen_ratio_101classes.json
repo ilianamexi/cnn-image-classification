@@ -1,0 +1,11 @@
+{
+  "model": "vgg16-frozen",
+  "split": "ratio",
+  "n_classes": 101,
+  "seed": 42,
+  "n_train": 5162,
+  "n_val": 911,
+  "n_test": 2604,
+  "accuracy": 0.9032258064516129,
+  "mean_per_class_accuracy": 0.8497960906151188
+}
