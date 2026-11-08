@@ -41,7 +41,10 @@ from sklearn.model_selection import train_test_split
 
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data" / "101_ObjectCategories"
-CALTECH_URL = "https://data.caltech.edu/records/mzrjq-6wc02/files/caltech-101.zip"
+CALTECH_URLS = [  # official CaltechDATA record; the plain link answers 403 to scripts without these
+    "https://data.caltech.edu/records/mzrjq-6wc02/files/caltech-101.zip?download=1",
+    "https://data.caltech.edu/api/records/mzrjq-6wc02/files/caltech-101.zip/content",
+]
 EXCLUDED = {"BACKGROUND_Google"}
 IMG = 224
 
@@ -52,8 +55,21 @@ def download_caltech101() -> None:
     target.mkdir(exist_ok=True)
     zpath = target / "caltech-101.zip"
     if not zpath.exists():
-        print(f"downloading {CALTECH_URL}")
-        urllib.request.urlretrieve(CALTECH_URL, zpath)
+        last = None
+        for url in CALTECH_URLS:
+            try:
+                print(f"downloading {url}")
+                req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (research script)"})
+                with urllib.request.urlopen(req, timeout=600) as r, open(zpath, "wb") as f:
+                    while chunk := r.read(1 << 20):
+                        f.write(chunk)
+                break
+            except Exception as e:  # noqa: BLE001 - try the next link
+                last = e
+                zpath.unlink(missing_ok=True)
+        else:
+            raise RuntimeError(f"Caltech-101 download failed ({last}). Download it from "
+                               "https://data.caltech.edu/records/mzrjq-6wc02 and extract it into data/.")
     with zipfile.ZipFile(zpath) as z:
         z.extractall(target)
     inner = next(target.rglob("101_ObjectCategories.tar.gz"))
