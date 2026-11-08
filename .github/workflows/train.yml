@@ -1,0 +1,38 @@
+name: train
+
+# Tests run on every push. The VGG16 experiments (CPU, about 30-60 min) run when started from the
+# Actions tab or when a commit message contains [run-training]. AlexNet from scratch needs a GPU
+# and is not run here.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python -m pytest -q tests
+
+  vgg16:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-training]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python train.py --model vgg16-frozen --split per-class
+      - run: python train.py --model vgg16-frozen --split ratio
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results
+          path: results/
