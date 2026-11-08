@@ -15,7 +15,7 @@ the test set is used once, at the end.
 
 The background clutter folder (BACKGROUND_Google) is not an object class and is excluded.
 Metrics: overall accuracy and mean per-class accuracy (the standard Caltech-101 measure,
-because class sizes range from 31 to 800 images).
+because class sizes are very unequal, roughly 40 to 800 images).
 
 Usage:
     python train.py --model vgg16-frozen --split per-class
